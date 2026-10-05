@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, useWindowDimensions, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +15,8 @@ const promoCards = [
 
 export default function Home() {
   const t = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
+  const promoWidth = screenWidth - 40;
   const [search, setSearch] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -56,6 +58,11 @@ export default function Home() {
       <Pressable onPress={() => setFilterOpen((open) => !open)} accessibilityRole="button" accessibilityLabel="Filter products" accessibilityState={{ expanded: filterOpen }} style={{ width: 50, height: 50, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: filterOpen ? t.accent : t.border, backgroundColor: filterOpen ? t.accentSurface : t.surface }}><Feather name="sliders" size={19} color={t.accent} /></Pressable>
     </View>
 
+    <View style={{ flexDirection: "row", gap: 9 }}>
+      <TrustCard icon="truck" title="Delivery guarantee" description="Refund for any issue" />
+      <TrustCard icon="tag" title="Clear pricing" description="See each price before you order" />
+    </View>
+
     {filterOpen ? <View style={{ gap: 11, padding: 14, backgroundColor: t.surface, borderWidth: 1, borderColor: t.border }}>
       <View style={{ gap: 8 }}><Text style={{ color: t.text, fontSize: 13, fontWeight: "600" }}>Category</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7 }}>{chip("All", !category, () => setCategory(""))}{(categories.data ?? []).map((item: any) => chip(item.name, category === item.id, () => setCategory(category === item.id ? "" : item.id)))}</ScrollView></View>
       <View style={{ gap: 8 }}><Text style={{ color: t.text, fontSize: 13, fontWeight: "600" }}>Sort by</Text><View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>{chip("Latest", sort === "newest", () => setSort("newest"))}{chip("Price: low to high", sort === "price_asc", () => setSort("price_asc"))}{chip("Price: high to low", sort === "price_desc", () => setSort("price_desc"))}</View></View>
@@ -65,13 +72,6 @@ export default function Home() {
       <Heading eyebrow="Search NESTORA">{rawSearch ? `Results for “${rawSearch}”` : "Find your piece."}</Heading>
       {searchTerm !== rawSearch ? <View style={{ alignItems: "center", padding: 20 }}><ActivityIndicator color={t.accent} /></View> : searchResults.isLoading ? <View style={{ alignItems: "center", padding: 20 }}><ActivityIndicator color={t.accent} /></View> : searchResults.isError ? <Notice error>We could not search the catalogue. Pull down to try again.</Notice> : searchResults.data?.length ? <ProductGrid products={searchResults.data} /> : <Notice>No products match those choices.</Notice>}
     </View> : <>
-      <View style={{ backgroundColor: t.accentSurface, paddingVertical: 12, paddingHorizontal: 14 }}><Text style={{ color: t.accent, fontSize: 12 }}>Thoughtful pieces for living well</Text></View>
-
-      <View style={{ flexDirection: "row", gap: 9 }}>
-        <TrustCard icon="truck" title="Delivery guarantee" description="Refund for any issue" />
-        <TrustCard icon="tag" title="Clear pricing" description="See each price before you order" />
-      </View>
-
       <View style={{ height: 320, backgroundColor: t.surfaceMuted, justifyContent: "flex-end", overflow: "hidden" }}>
         <Image source={{ uri: hero }} accessibilityLabel="Warm contemporary NESTORA living room" style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" />
         <View style={{ ...StyleSheet.absoluteFill, backgroundColor: "rgba(22, 23, 19, 0.34)" }} />
@@ -90,10 +90,10 @@ export default function Home() {
 
       <View style={{ gap: 13 }}>
         <Heading eyebrow="The NESTORA edit">Rooms to make your own</Heading>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 20 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={promoWidth + 12} snapToAlignment="start" decelerationRate="fast" disableIntervalMomentum contentContainerStyle={{ gap: 12 }}>
           {promoCards.map((item) => {
             const categoryId = (categories.data ?? []).find((candidate: any) => candidate.slug === item.slug)?.id;
-            return <Pressable key={item.slug} onPress={() => categoryId ? router.push({ pathname: "/(tabs)/shop", params: { category: categoryId } }) : router.push("/(tabs)/shop")} accessibilityRole="button" accessibilityLabel={`${item.eyebrow}: ${item.title.replace("\n", " ")}`} style={{ width: 300, height: 190, flexDirection: "row", backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, overflow: "hidden" }}>
+            return <Pressable key={item.slug} onPress={() => categoryId ? router.push({ pathname: "/(tabs)/shop", params: { category: categoryId } }) : router.push("/(tabs)/shop")} accessibilityRole="button" accessibilityLabel={`${item.eyebrow}: ${item.title.replace("\n", " ")}`} style={{ width: promoWidth, height: 190, flexDirection: "row", backgroundColor: t.surface, borderWidth: 1, borderColor: t.border, overflow: "hidden" }}>
               <View style={{ width: "54%", justifyContent: "center", gap: 8, padding: 13 }}><Text style={{ color: t.accent, fontSize: 9, letterSpacing: 1.1 }}>{item.eyebrow.toUpperCase()}</Text><Text style={{ color: t.text, fontFamily: "serif", fontSize: 19, lineHeight: 23 }}>{item.title}</Text><View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><Text numberOfLines={1} style={{ color: t.secondary, fontSize: 10 }}>{item.action}</Text><Feather name="arrow-right" size={12} color={t.accent} /></View></View>
               <Image source={{ uri: item.image }} accessibilityLabel={item.alt} style={{ width: "46%", height: "100%", backgroundColor: t.surfaceMuted }} resizeMode="cover" />
             </Pressable>;
@@ -109,5 +109,5 @@ export default function Home() {
 
 function TrustCard({ icon, title, description }: { icon: "truck" | "tag"; title: string; description: string }) {
   const t = useTheme();
-  return <View style={{ flex: 1, minHeight: 92, flexDirection: "row", alignItems: "center", gap: 9, padding: 11, backgroundColor: t.surface, borderWidth: 1, borderColor: t.border }}><Feather name={icon} size={20} color={t.accent} /><View style={{ flex: 1, gap: 4 }}><Text style={{ color: t.text, fontSize: 11, fontWeight: "700" }}>{title}</Text><Text style={{ color: t.secondary, fontSize: 10, lineHeight: 14 }}>{description}</Text></View></View>;
+  return <View style={{ flex: 1, minHeight: 80, flexDirection: "row", alignItems: "center", gap: 9, paddingHorizontal: 11, paddingVertical: 7, backgroundColor: t.surface, borderWidth: 1, borderColor: t.border }}><Feather name={icon} size={20} color={t.accent} /><View style={{ flex: 1, gap: 4 }}><Text style={{ color: t.text, fontSize: 11, fontWeight: "700" }}>{title}</Text><Text style={{ color: t.secondary, fontSize: 10, lineHeight: 14 }}>{description}</Text></View></View>;
 }

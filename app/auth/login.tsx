@@ -30,5 +30,5 @@ export default function Login() {
     } catch { Alert.alert("Could not sign in", "Please try Google sign-in again."); }
     finally { setBusy(false); }
   }
-  return <Page scroll={false}><View style={{ flex: 1, justifyContent: "flex-end", paddingBottom: 34, gap: 26 }}><Text style={{ color: t.text, fontFamily: "serif", fontSize: 22, letterSpacing: 4 }}>NESTORA</Text><Heading eyebrow="Modern furniture for modern living">A little space{"\n"}for you.</Heading><Text style={{ color: t.secondary, fontSize: 15, lineHeight: 24 }}>Sign in to shop, save pieces you love and keep your orders together.</Text><Action label={busy ? "Opening Google…" : "Continue with Google"} onPress={signIn} /></View></Page>;
+  return <Page scroll={false}><View style={{ flex: 1, justifyContent: "flex-end", paddingBottom: 58, gap: 26 }}><Text style={{ color: t.text, fontFamily: "serif", fontSize: 22, letterSpacing: 4 }}>NESTORA</Text><Heading eyebrow="Modern furniture for modern living">A little space{"\n"}for you.</Heading><Text style={{ color: t.secondary, fontSize: 15, lineHeight: 24 }}>Sign in to shop, save pieces you love and keep your orders together.</Text><Action label={busy ? "Opening Google…" : "Continue with Google"} onPress={signIn} /></View></Page>;
 }

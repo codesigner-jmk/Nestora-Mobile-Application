@@ -24,9 +24,10 @@ function Gate() {
 function AppFrame() {
   const { ready } = useAuth();
   const colorScheme = useColorScheme();
-  const { height } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const [splashVisible, setSplashVisible] = useState(true);
-  const slideY = useRef(new Animated.Value(0)).current;
+  const splashStartedAt = useRef(Date.now()).current;
+  const slideX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     let previous = AppState.currentState;
@@ -42,18 +43,22 @@ function AppFrame() {
   useEffect(() => {
     if (!ready) return;
     let cancelled = false;
-    void SplashScreen.hideAsync().then(() => {
-      if (cancelled) return;
-      Animated.timing(slideY, { toValue: -height, duration: 480, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
-        if (finished) setSplashVisible(false);
+    const minimumDisplayMs = 2200;
+    const remainingDisplayMs = Math.max(0, minimumDisplayMs - (Date.now() - splashStartedAt));
+    const timer = setTimeout(() => {
+      void SplashScreen.hideAsync().catch(() => undefined).then(() => {
+        if (cancelled) return;
+        Animated.timing(slideX, { toValue: -width, duration: 500, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }).start(({ finished }) => {
+          if (finished) setSplashVisible(false);
+        });
       });
-    }).catch(() => setSplashVisible(false));
-    return () => { cancelled = true; };
-  }, [ready, height, slideY]);
+    }, remainingDisplayMs);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [ready, width, slideX, splashStartedAt]);
 
   return <View style={{ flex: 1 }}>
     <Gate />
-    {splashVisible ? <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: 1000, elevation: 1000, alignItems: "center", justifyContent: "center", backgroundColor: colorScheme === "dark" ? "#191A16" : "#F8F6F2", transform: [{ translateY: slideY }] }]}>
+    {splashVisible ? <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { zIndex: 1000, elevation: 1000, alignItems: "center", justifyContent: "center", backgroundColor: colorScheme === "dark" ? "#191A16" : "#F8F6F2", transform: [{ translateX: slideX }] }]}>
       <Image source={colorScheme === "dark" ? require("../assets/splash-dark.png") : require("../assets/splash-light.png")} style={{ width: 320, height: 113 }} resizeMode="contain" />
     </Animated.View> : null}
   </View>;
